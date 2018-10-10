@@ -587,6 +587,7 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
             boost::filesystem::path imagePath = rootDir;
             imagePath /= imageFilename;
 
+            // 讀圖片
             frame->image() = cv::imread(imagePath.string().c_str(), -1);
             if (frame->image().empty())
             {

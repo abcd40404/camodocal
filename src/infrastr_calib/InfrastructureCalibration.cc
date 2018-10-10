@@ -80,6 +80,7 @@ InfrastructureCalibration::loadMap(const std::string& mapDirectory)
     }
 
     m_locrec = boost::make_shared<LocationRecognition>();
+    // 建立 vocabulary tree
     m_locrec->setup(m_refGraph);
 
     if (m_verbose)
@@ -111,7 +112,7 @@ InfrastructureCalibration::addFrameSet(const std::vector<cv::Mat>& images,
     {
         frames.at(i) = boost::make_shared<Frame>();
         frames.at(i)->cameraId() = i;
-
+        // 求每張圖像的 camera pose
         threads.at(i) = boost::make_shared<boost::thread>(&InfrastructureCalibration::estimateCameraPose,
                                                           this, images.at(i), timestamp,
                                                           frames.at(i), preprocess);
@@ -131,7 +132,7 @@ InfrastructureCalibration::addFrameSet(const std::vector<cv::Mat>& images,
         {
             continue;
         }
-
+        // 把 n 張 frame 包起來
         frameset.frames.push_back(frames.at(i));
     }
 
@@ -203,7 +204,7 @@ InfrastructureCalibration::addFrameSet(const std::vector<cv::Mat>& images,
     {
         return;
     }
-
+    // 存入 working data
     m_framesets.push_back(frameset);
 
     if (m_verbose)
@@ -258,6 +259,10 @@ InfrastructureCalibration::reset(void)
     m_overlay.clear();
 #endif
 }
+
+/*
+* 求外參
+*/
 
 void
 InfrastructureCalibration::run(void)
@@ -594,6 +599,10 @@ InfrastructureCalibration::saveFrameSets(const std::string& filename) const
     }
 }
 
+/*
+* 傳入一張圖像
+* 想求出他的 camera pose
+*/
 void
 InfrastructureCalibration::estimateCameraPose(const cv::Mat& image,
                                               uint64_t timestamp,
@@ -638,6 +647,7 @@ InfrastructureCalibration::estimateCameraPose(const cv::Mat& image,
 
     double tsStart = timeInSeconds();
 
+    // 計算特徵點和描述子
     // compute keypoints and descriptors
     cv::Ptr<SurfGPU> surf = SurfGPU::instance(300.0);
 
@@ -648,7 +658,7 @@ InfrastructureCalibration::estimateCameraPose(const cv::Mat& image,
     surf->compute(imageProc, keypoints, descriptors);
 
 //    image.copyTo(frame->image());
-
+    // 包成 ferute2D 塞到 frame
     for (size_t i = 0; i < keypoints.size(); ++i)
     {
         Point2DFeaturePtr feature2D = boost::make_shared<Point2DFeature>();
@@ -660,7 +670,7 @@ InfrastructureCalibration::estimateCameraPose(const cv::Mat& image,
 
         frame->features2D().push_back(feature2D);
     }
-
+    // 在 map 找 k 張相近的圖像
     // find k closest matches in vocabulary tree
     std::vector<FrameTag> candidates;
     m_locrec->knnMatch(frame, k_nearestImageMatches, candidates);
@@ -668,8 +678,13 @@ InfrastructureCalibration::estimateCameraPose(const cv::Mat& image,
     // find match with highest number of inlier 2D-2D correspondences
     int bestInlierCount = 0;
     std::vector<std::pair<Point2DFeaturePtr, Point3DFeaturePtr> > bestCorr2D3D;
+    //最好的 camera pose
     Eigen::Matrix4d bestH;
-
+    /*
+    * 針對每個 candidate, 求出圖像與 candidate 之間的 2D-3D 關係
+    * 並用 P3P 找到圖像的 camera pose
+    * 根據 inlier 數量, 存下最好的 camera pose
+    */
     for (size_t i = 0; i < candidates.size(); ++i)
     {
         FrameTag tag = candidates.at(i);
@@ -727,7 +742,8 @@ InfrastructureCalibration::estimateCameraPose(const cv::Mat& image,
 
     PosePtr pose = boost::make_shared<Pose>(bestH);
     pose->timeStamp() = timestamp;
-
+    // 將剛剛求得最好的 camera pose
+    // 放入 frame
     frame->cameraPose() = pose;
 
     // store inlier 2D-3D correspondences
@@ -1369,7 +1385,7 @@ InfrastructureCalibration::visualizeMap(const std::string& overlayName, MapType 
             // visualize 3D scene points
             switch (i)
             {
-            case vcharge::CAMERA_FRONT:
+            case vcharge::CAMERA_FRONT:存入
                 overlay.color4f(1.0f, 0.0f, 0.0f, 0.5f);
                 break;
             case vcharge::CAMERA_LEFT:

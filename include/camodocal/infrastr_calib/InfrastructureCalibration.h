@@ -108,6 +108,7 @@ private:
     boost::shared_ptr<LocationRecognition> m_locrec;
     boost::mutex m_feature3DMapMutex;
     boost::unordered_map<Point3DFeature*, Point3DFeaturePtr> m_feature3DMap;
+    // 存加入的 frameset
     std::vector<FrameSet> m_framesets;
     double m_x_last;
     double m_y_last;
