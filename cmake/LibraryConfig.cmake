@@ -36,8 +36,8 @@ camodocal_optional_dependency(CUDA)
 camodocal_required_dependency(Eigen3)
 camodocal_required_dependency(LAPACK)
 camodocal_required_dependency(SuiteSparse)
-
 if(NOT USE_INTERNAL_CERES)
+# 這邊會先找 GFlags, CeresConfig.cmake
 camodocal_optional_dependency(Ceres)
 endif()
 camodocal_optional_dependency(GTest)
@@ -45,6 +45,7 @@ camodocal_optional_dependency(OpenMP)
 camodocal_optional_dependency(Glog)
 camodocal_optional_dependency(Gflags)
 camodocal_optional_dependency(TBB)
+set(OpenCV_DIR "/usr/local/share/OpenCV/")
 camodocal_optional_dependency(OpenCV)
 
 # Consider making this impossible to use external Ceres again due to the following possible issue:

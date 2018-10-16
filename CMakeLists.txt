@@ -13,12 +13,13 @@ SET (CMAKE_MODULE_PATH "${PROJECT_CMAKE_DIR}" "${CMAKE_MODULE_PATH}" )
 # Add custom Install Settings
 INCLUDE(InstallSettings)
 
-
+# 搜尋函式庫
 # Libraries
+message(STATUS "START")
 set(CAMODOCAL_INCLUDE_INSTALL_PATH "include")
 # Library finding
 include(LibraryConfig)
-
+message(STATUS "DONE")
 # General build and compiler options and configurations
 include(BuildConfig)
 
