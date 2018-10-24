@@ -55,14 +55,14 @@ InfrastructureCalibration::loadMap(const std::string& mapDirectory)
     }
 
     boost::filesystem::path graphPath(mapDirectory);
-    graphPath /= "frames_5.sg";
+    // graphPath /= "frames_5.sg";
+    graphPath /= "map.out";
 
     if (!m_refGraph.readFromBinaryFile(graphPath.string()))
     {
         std::cout << std::endl << "# ERROR: Cannot read graph file " << graphPath.string() << "." << std::endl;
         return false;
     }
-
     if (m_verbose)
     {
         std::cout << "Finished." << std::endl;
@@ -81,7 +81,7 @@ InfrastructureCalibration::loadMap(const std::string& mapDirectory)
 
     m_locrec = boost::make_shared<LocationRecognition>();
     // 建立 vocabulary tree
-    m_locrec->setup(m_refGraph);
+    // m_locrec->setup(m_refGraph);
 
     if (m_verbose)
     {

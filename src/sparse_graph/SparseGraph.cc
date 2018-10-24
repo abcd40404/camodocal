@@ -516,47 +516,48 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
     }
 
     m_frameSetSegments.clear();
-
     // parse binary file
     std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open())
     {
         return false;
     }
-
+    std::cout << "start read\n";
     size_t nFrames;
     readData(ifs, nFrames);
-
+    
     size_t nPoses;
     readData(ifs, nPoses);
 
-    size_t nOdometry;
-    readData(ifs, nOdometry);
+    // size_t nOdometry;
+    // readData(ifs, nOdometry);
 
     size_t nFeatures2D;
     readData(ifs, nFeatures2D);
 
     size_t nFeatures3D;
     readData(ifs, nFeatures3D);
-
     std::vector<FramePtr> frameMap(nFrames);
     for (size_t i = 0; i < nFrames; ++i)
-    {
+    {   
         frameMap.at(i) = boost::make_shared<Frame>();
     }
 
+    // bug
+    
     std::vector<PosePtr> poseMap(nPoses);
     for (size_t i = 0; i < nPoses; ++i)
     {
+        std::cout << i << std::endl;
         poseMap.at(i) = boost::make_shared<Pose>();
     }
 
-    std::vector<OdometryPtr> odometryMap(nOdometry);
-    for (size_t i = 0; i < nOdometry; ++i)
-    {
-        odometryMap.at(i) = boost::make_shared<Odometry>();
-    }
-
+    // std::vector<OdometryPtr> odometryMap(nOdometry);
+    // for (size_t i = 0; i < nOdometry; ++i)
+    // {
+    //     odometryMap.at(i) = boost::make_shared<Odometry>();
+    // }
+    
     std::vector<Point2DFeaturePtr> feature2DMap(nFeatures2D);
     for (size_t i = 0; i < nFeatures2D; ++i)
     {
@@ -606,24 +607,24 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
             frame->cameraPose() = poseMap.at(poseId);
         }
 
-        size_t odometryId;
-        readData(ifs, odometryId);
-        if (odometryId != static_cast<size_t>(-1))
-        {
-            frame->systemPose() = odometryMap.at(odometryId);
-        }
+        // size_t odometryId;
+        // readData(ifs, odometryId);
+        // if (odometryId != static_cast<size_t>(-1))
+        // {
+        //     frame->systemPose() = odometryMap.at(odometryId);
+        // }
 
-        readData(ifs, odometryId);
-        if (odometryId != static_cast<size_t>(-1))
-        {
-            frame->odometryMeasurement() = odometryMap.at(odometryId);
-        }
+        // readData(ifs, odometryId);
+        // if (odometryId != static_cast<size_t>(-1))
+        // {
+        //     frame->odometryMeasurement() = odometryMap.at(odometryId);
+        // }
 
-        readData(ifs, poseId);
-        if (poseId != static_cast<size_t>(-1))
-        {
-            frame->gpsInsMeasurement() = poseMap.at(poseId);
-        }
+        // readData(ifs, poseId);
+        // if (poseId != static_cast<size_t>(-1))
+        // {
+        //     frame->gpsInsMeasurement() = poseMap.at(poseId);
+        // }
 
         size_t nFeatures2D;
         readData(ifs, nFeatures2D);
@@ -649,7 +650,7 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
 
         PosePtr& pose = poseMap.at(poseId);
 
-        readData(ifs, pose->timeStamp());
+        // readData(ifs, pose->timeStamp());
 
         double q[4];
         readData(ifs, q[0]);
@@ -666,30 +667,30 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
 
         memcpy(pose->translationData(), t, sizeof(double) * 3);
 
-        double cov[49];
-        for (int j = 0; j < 49; ++j)
-        {
-            readData(ifs, cov[j]);
-        }
+        // double cov[49];
+        // for (int j = 0; j < 49; ++j)
+        // {
+        //     readData(ifs, cov[j]);
+        // }
 
-        memcpy(pose->covarianceData(), cov, sizeof(double) * 49);
+        // memcpy(pose->covarianceData(), cov, sizeof(double) * 49);
     }
 
-    for (size_t i = 0; i < nOdometry; ++i)
-    {
-        size_t odometryId;
-        readData(ifs, odometryId);
+    // for (size_t i = 0; i < nOdometry; ++i)
+    // {
+    //     size_t odometryId;
+    //     readData(ifs, odometryId);
 
-        OdometryPtr& odometry = odometryMap.at(odometryId);
+    //     OdometryPtr& odometry = odometryMap.at(odometryId);
 
-        readData(ifs, odometry->timeStamp());
-        readData(ifs, odometry->x());
-        readData(ifs, odometry->y());
-        readData(ifs, odometry->z());
-        readData(ifs, odometry->yaw());
-        readData(ifs, odometry->pitch());
-        readData(ifs, odometry->roll());
-    }
+    //     readData(ifs, odometry->timeStamp());
+    //     readData(ifs, odometry->x());
+    //     readData(ifs, odometry->y());
+    //     readData(ifs, odometry->z());
+    //     readData(ifs, odometry->yaw());
+    //     readData(ifs, odometry->pitch());
+    //     readData(ifs, odometry->roll());
+    // }
 
     std::vector<size_t> tmp;
     for (size_t i = 0; i < nFeatures2D; ++i)
@@ -749,50 +750,50 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
         readData(ifs, feature2D->keypoint().response);
         readData(ifs, feature2D->keypoint().size);
         readData(ifs, feature2D->index());
-        readData(ifs, feature2D->bestPrevMatchId());
-        readData(ifs, feature2D->bestNextMatchId());
+        // readData(ifs, feature2D->bestPrevMatchId());
+        // readData(ifs, feature2D->bestNextMatchId());
 
-        size_t nPrevMatches;
-        readData(ifs, nPrevMatches);
-        feature2D->prevMatches().resize(nPrevMatches);
+        // size_t nPrevMatches;
+        // readData(ifs, nPrevMatches);
+        // feature2D->prevMatches().resize(nPrevMatches);
 
-        for (size_t j = 0; j < feature2D->prevMatches().size(); ++j)
-        {
-            readData(ifs, featureId);
+        // for (size_t j = 0; j < feature2D->prevMatches().size(); ++j)
+        // {
+        //     readData(ifs, featureId);
 
-            if (featureId != static_cast<size_t>(-1))
-            {
-                feature2D->prevMatches().at(j) = feature2DMap.at(featureId);
-            }
-        }
+        //     if (featureId != static_cast<size_t>(-1))
+        //     {
+        //         feature2D->prevMatches().at(j) = feature2DMap.at(featureId);
+        //     }
+        // }
 
-        size_t nNextMatches;
-        readData(ifs, nNextMatches);
-        feature2D->nextMatches().resize(nNextMatches);
+        // size_t nNextMatches;
+        // readData(ifs, nNextMatches);
+        // feature2D->nextMatches().resize(nNextMatches);
 
-        for (size_t j = 0; j < feature2D->nextMatches().size(); ++j)
-        {
-            readData(ifs, featureId);
+        // for (size_t j = 0; j < feature2D->nextMatches().size(); ++j)
+        // {
+        //     readData(ifs, featureId);
 
-            if (featureId != static_cast<size_t>(-1))
-            {
-                feature2D->nextMatches().at(j) = feature2DMap.at(featureId);
-            }
-        }
+        //     if (featureId != static_cast<size_t>(-1))
+        //     {
+        //         feature2D->nextMatches().at(j) = feature2DMap.at(featureId);
+        //     }
+        // }
 
-        size_t feature3DId;
-        readData(ifs, feature3DId);
-        if (feature3DId != static_cast<size_t>(-1))
-        {
-            feature2D->feature3D() = feature3DMap.at(feature3DId);
-        }
+        // size_t feature3DId;
+        // readData(ifs, feature3DId);
+        // if (feature3DId != static_cast<size_t>(-1))
+        // {
+        //     feature2D->feature3D() = feature3DMap.at(feature3DId);
+        // }
 
-        size_t frameId;
-        readData(ifs, frameId);
-        if (frameId != static_cast<size_t>(-1))
-        {
-            feature2D->frame() = frameMap.at(frameId);
-        }
+        // size_t frameId;
+        // readData(ifs, frameId);
+        // if (frameId != static_cast<size_t>(-1))
+        // {
+        //     feature2D->frame() = frameMap.at(frameId);
+        // }
     }
 
     for (size_t i = 0; i < nFeatures3D; ++i)
@@ -807,13 +808,13 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
         readData(ifs, P(1));
         readData(ifs, P(2));
 
-        double cov[9];
-        for (int j = 0; j < 9; ++j)
-        {
-            readData(ifs, cov[j]);
-        }
+        // double cov[9];
+        // for (int j = 0; j < 9; ++j)
+        // {
+        //     readData(ifs, cov[j]);
+        // }
 
-        memcpy(feature3D->pointCovarianceData(), cov, sizeof(double) * 9);
+        // memcpy(feature3D->pointCovarianceData(), cov, sizeof(double) * 9);
 
         readData(ifs, feature3D->attributes());
         readData(ifs, feature3D->weight());
@@ -866,25 +867,25 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
                 }
             }
 
-            size_t odometryId;
-            readData(ifs, odometryId);
-            if (odometryId != static_cast<size_t>(-1))
-            {
-                frameSet->systemPose() = odometryMap.at(odometryId);
-            }
+            // size_t odometryId;
+            // readData(ifs, odometryId);
+            // if (odometryId != static_cast<size_t>(-1))
+            // {
+            //     frameSet->systemPose() = odometryMap.at(odometryId);
+            // }
 
-            readData(ifs, odometryId);
-            if (odometryId != static_cast<size_t>(-1))
-            {
-                frameSet->odometryMeasurement() = odometryMap.at(odometryId);
-            }
+            // readData(ifs, odometryId);
+            // if (odometryId != static_cast<size_t>(-1))
+            // {
+            //     frameSet->odometryMeasurement() = odometryMap.at(odometryId);
+            // }
 
-            size_t poseId;
-            readData(ifs, poseId);
-            if (poseId != static_cast<size_t>(-1))
-            {
-                frameSet->gpsInsMeasurement() = poseMap.at(poseId);
-            }
+            // size_t poseId;
+            // readData(ifs, poseId);
+            // if (poseId != static_cast<size_t>(-1))
+            // {
+            //     frameSet->gpsInsMeasurement() = poseMap.at(poseId);
+            // }
         }
     }
 
