@@ -25,28 +25,29 @@
 // }
 // #endif // HAVE_OPENCV3
 // #endif // HAVE_CUDA
-
-// #include "camodocal/infrastr_calib/InfrastructureCalibration.h"
-#include <camodocal/sparse_graph/Pose.h>
+// 
+#include "camodocal/infrastr_calib/InfrastructureCalibration.h"
 #include <boost/make_shared.hpp>
-// #include <Eigen/StdVector>
+#include <camodocal/sparse_graph/SparseGraph.h>
 
-// std::vector<camodocal::CameraPtr> cameras;
-// camodocal::InfrastructureCalibration INF(cameras);
+std::vector<camodocal::CameraPtr> cameras;
+camodocal::InfrastructureCalibration INF(cameras);
 
 using namespace std;
+using namespace camodocal;
 
 int main(){
-    // printf("OK\n");
-    // const std::string& path = "./";
-    // INF.loadMap(path);
+    const std::string& path = "./";
+    INF.loadMap(path);
+    // boost::shared_ptr<Pose> a = boost::make_shared<Pose>();
     // camodocal::InfrastructureCalibration::run();
-    std::vector<boost::shared_ptr<camodocal::Pose> > test(10);
-    for(int i = 0 ; i < 10; i++){
-      // boost::shared_ptr<camodocal::Pose> p = boost::make_shared<camodocal::Pose>();
-        // std::cout << i << std::endl;
-        // boost::make_shared<Eigen::Vector4f>();
-        test.push_back( boost::make_shared<camodocal::Pose>());
-    }
+    // std::vector<camodocal::PosePtr> test(10);
+    // camodocal::Pose a;
+    // for(int i = 0 ; i < 10; i++){
+    //     ok
+    //     test.at(i) = boost::allocate_shared<camodocal::Pose>(Eigen::aligned_allocator<camodocal::Pose>());
+    //     gg
+    //     test.push_back( boost::make_shared<camodocal::Pose>());
+    // }
     return 0;
 }
