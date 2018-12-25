@@ -81,7 +81,7 @@ InfrastructureCalibration::loadMap(const std::string& mapDirectory)
 
     m_locrec = boost::make_shared<LocationRecognition>();
     // 建立 vocabulary tree
-    // m_locrec->setup(m_refGraph);
+    m_locrec->setup(m_refGraph);
 
     if (m_verbose)
     {
@@ -383,6 +383,7 @@ InfrastructureCalibration::run(void)
         }
 
         std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d> > poses(m_cameras.size());
+        // 拿出一個 frameset 中所有的 camera pose
         for (size_t j = 0; j < frameset.frames.size(); ++j)
         {
             int cameraIdx = frameset.frames.at(j)->cameraId();
@@ -392,9 +393,11 @@ InfrastructureCalibration::run(void)
 
         std::vector<Pose, Eigen::aligned_allocator<Pose> > T_cam_ref(m_cameras.size());
 
+        // 以 camera 0 當作參考
         T_cam_ref.at(0).rotation() = Eigen::Quaterniond::Identity();
         T_cam_ref.at(0).translation() = Eigen::Vector3d::Zero();
 
+        // 這邊是幹嘛的？
         for (size_t j = 1; j < m_cameras.size(); ++j)
         {
             Eigen::Matrix4d H_cam_ref = poses.at(0) * poses.at(j).inverse();
@@ -484,7 +487,7 @@ InfrastructureCalibration::run(void)
             Eigen::Matrix4d H = cameraPose->toMatrix().inverse() * T_cam_ref.at(cameraIdx).toMatrix().inverse();
 
             pos += H.block<3,1>(0,3);
-            att.push_back(Eigen::Quaterniond(H.block<3,3>(0,0)));
+            att.push_back(Eigen::Quaterniond(H.block<3,3>(0,0))); // 旋轉
         }
 
         pos /= frameset.frames.size();

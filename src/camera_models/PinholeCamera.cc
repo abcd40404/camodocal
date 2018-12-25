@@ -9,6 +9,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "../gpl/gpl.h"
+#include <iostream>
 
 namespace camodocal
 {

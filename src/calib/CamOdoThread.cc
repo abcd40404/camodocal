@@ -209,7 +209,6 @@ CamOdoThread::threadFunction(void)
 #endif
 
     bool halt = false;
-
     while (!halt)
     {
         boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(10);
@@ -222,6 +221,8 @@ CamOdoThread::threadFunction(void)
         {
             std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d> > voPoses = tracker.getPoses();
 
+                puts("addCamOdoCalibData ERROR");
+            std::cout << odometryPoses.size() << std::endl;
             if (odometryPoses.size() >= k_minVOSegmentSize)
             {
                 addCamOdoCalibData(voPoses, odometryPoses, tracker.getFrames());
@@ -474,6 +475,8 @@ CamOdoThread::threadFunction(void)
     //    m_camOdoCalib.writeMotionSegmentsToFile(filename);
 
         Eigen::Matrix4d H_cam_odo;
+        puts("BUG");
+        //# ERROR: No segments, calibration fails!!
         m_camOdoCalib.calibrate(H_cam_odo);
 
         m_camOdoTransform = H_cam_odo;

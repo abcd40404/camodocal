@@ -185,8 +185,10 @@ CamRigOdoCalibration::start(void)
         std::cout << "# INFO: Running camera-odometry calibration for each of the " << m_cameras.size() << " cameras." << std::endl;
 
         // run odometry-camera calibration for each camera
+        // == camera size()
         for (size_t i = 0; i < m_camOdoThreads.size(); ++i)
         {
+            puts("BUG");
             m_camOdoThreads.at(i)->launch();
         }
 
@@ -205,7 +207,7 @@ CamRigOdoCalibration::start(void)
         {
             cv::destroyWindow(m_cameras.at(i)->cameraName());
         }
-
+        // fragment size = 0 先看 thread
         buildGraph();
 
         m_running = true;
@@ -276,6 +278,11 @@ CamRigOdoCalibration::start(void)
     // run calibration steps
     CameraRigBA ba(m_cameraSystem, m_graph, m_options.windowDistance);
     ba.setVerbose(m_options.verbose);
+    puts("CameraRigBA BUG");
+    /**
+     * stage 1
+     * dumpPointCloud 的 cameraPoses 是空的
+     */
     ba.run(m_options.beginStage, m_options.optimizeIntrinsics, m_options.saveWorkingData, m_options.dataDir);
 
     std::cout << "# INFO: Camera rig calibration took " << timeInSeconds() - tsStart << "s." << std::endl;
@@ -327,7 +334,7 @@ CamRigOdoCalibration::buildGraph(void)
 {
     boost::icl::interval_map<uint64_t, std::set<int> > intervals;
     std::vector<std::set<int> > cameraIdSets(m_camOdoThreads.size());
-
+    std::cout << "TS: " << m_camOdoThreads.size() << std::endl;
     for (size_t i = 0; i < m_camOdoThreads.size(); ++i)
     {
         CamOdoThread* camOdoThread = m_camOdoThreads.at(i);
@@ -337,7 +344,7 @@ CamRigOdoCalibration::buildGraph(void)
                                            camOdoThread->camOdoTransform());
 
         cameraIdSets[i].insert(camOdoThread->cameraId());
-
+        std::cout << "Size: " <<camOdoThread->frameSegments().size();
         for (size_t j = 0; j < camOdoThread->frameSegments().size(); ++j)
         {
             uint64_t start = camOdoThread->frameSegments().at(j).front()->cameraPose()->timeStamp();

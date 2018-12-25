@@ -34,8 +34,7 @@ elseif(SUPPORTS_SSE1)
 endif()
 
 add_compiler_flags("${SSE_FLAGS}" CACHE)
-
-# These flags get added to the flags above
+# These flags get added to the flags above(${APPLE} not defined)
 if(APPLE)
 add_compiler_flags("    -g -ggdb -D_DEBUG -march=core2" Debug          CACHE)
 add_compiler_flags("             -DNDEBUG -march=core2" ReleaseAll     CACHE)
@@ -43,6 +42,7 @@ add_compiler_flags("-O2                   -march=core2" Release        CACHE)
 add_compiler_flags("-O2 -g -ggdb          -march=core2" RelWithDebInfo CACHE)
 add_compiler_flags("-Os                   -march=core2" MinSizeRel     CACHE)
 else(APPLE)
+# Eigen 用 DEBUG TYPE 會掛掉
 add_compiler_flags("    -g -ggdb -D_DEBUG -march=native" Debug          CACHE)
 add_compiler_flags("             -DNDEBUG -march=native" ReleaseAll     CACHE)
 add_compiler_flags("-O2                   -march=native" Release        CACHE)

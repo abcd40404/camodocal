@@ -37,8 +37,9 @@ using namespace std;
 using namespace camodocal;
 
 int main(){
-    const std::string& path = "./";
+    const std::string& path = "../data/";
     INF.loadMap(path);
+    INF.run();
     // boost::shared_ptr<Pose> a = boost::make_shared<Pose>();
     // camodocal::InfrastructureCalibration::run();
     // std::vector<camodocal::PosePtr> test(10);

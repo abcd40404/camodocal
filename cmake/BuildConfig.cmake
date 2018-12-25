@@ -111,7 +111,7 @@ option(EXTRA_COMPILER_WARNINGS "Enable some extra warnings (heavily pollutes the
 
 include(FlagUtilities)
 
-# Configure the compiler specific build options
+# Configure the compiler specific build options(設定 compiler 參數)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUC)
   include(BuildConfigGCC)
 else()

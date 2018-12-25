@@ -7,6 +7,7 @@ macro(set_cache _varname _type _docstring)
   endif()
 
   if(NOT DEFINED _INTERNAL_${_varname} OR "${_INTERNAL_${_varname}}" STREQUAL "${${_varname}}")
+    # ${_varname} = CMAKE_CXX_FLAGS_${TYPE} 設定編譯參數
     set(${_varname} "${_value}" CACHE ${_type} "${_docstring}" FORCE)
     set(_INTERNAL_${_varname} "${_value}" CACHE INTERNAL "Do not edit in any case!")
   endif()
@@ -156,6 +157,7 @@ macro(set_compiler_flags _flags)
 endmacro(set_compiler_flags)
 # Add flags (flags don't get added twice)
 macro(add_compiler_flags _flags)
+  # _mode _keys _key_postfix _flags
   _internal_parse_flags_args(APPEND "C;CXX" "" "${_flags}" "${ARGN}")
 endmacro(add_compiler_flags)
 # Remove flags

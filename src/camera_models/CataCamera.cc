@@ -161,7 +161,6 @@ bool
 CataCamera::Parameters::readFromYamlFile(const std::string& filename)
 {
     cv::FileStorage fs(filename, cv::FileStorage::READ);
-
     if (!fs.isOpened())
     {
         return false;
@@ -177,7 +176,6 @@ CataCamera::Parameters::readFromYamlFile(const std::string& filename)
             return false;
         }
     }
-
     m_modelType = MEI;
     fs["camera_name"] >> m_cameraName;
     m_imageWidth = static_cast<int>(fs["image_width"]);

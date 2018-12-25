@@ -7,7 +7,6 @@ Transform::Transform()
 {
     m_q.setIdentity();
     m_t.setZero();
-    puts("hi transform");
 }
 
 Transform::Transform(const Eigen::Matrix4d& H)

@@ -523,8 +523,8 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
         return false;
     }
     std::cout << "start read\n";
-    // size_t nFrames;
-    // readData(ifs, nFrames);
+    size_t nFrames;
+    readData(ifs, nFrames);
     
     size_t nPoses;
     readData(ifs, nPoses);
@@ -532,377 +532,354 @@ SparseGraph::readFromBinaryFile(const std::string& filename)
     // size_t nOdometry;
     // readData(ifs, nOdometry);
 
-    // size_t nFeatures2D;
-    // readData(ifs, nFeatures2D);
+    size_t nFeatures2D;
+    readData(ifs, nFeatures2D);
 
-    // size_t nFeatures3D;
-    // readData(ifs, nFeatures3D);
-    // std::vector<FramePtr> frameMap(nFrames);
-    // for (size_t i = 0; i < nFrames; ++i)
-    // {   
-    //     frameMap.at(i) = boost::make_shared<Frame>();
-    // }
-
-    // bug
+    size_t nFeatures3D;
+    readData(ifs, nFeatures3D);
+    std::vector<FramePtr> frameMap(nFrames);
+    for (size_t i = 0; i < nFrames; ++i)
+    {   
+        frameMap.at(i) = boost::make_shared<Frame>();
+    }
 
     std::vector<PosePtr> poseMap(nPoses);
-    poseMap.at(0) = boost::allocate_shared<Pose>(Eigen::aligned_allocator<Pose>());
-    poseMap.at(1) = boost::allocate_shared<Pose>(Eigen::aligned_allocator<Pose>());
-    // for (size_t i = 0; i < nPoses; ++i)
-    // {
-        // std::cout << i << std::endl;
-        // Transform* a = new Transform();
-        // std::vector<Transform> v(10);
-        // std::vector<Pose> v;
-        // Pose* a;
-        // Pose* a = new Pose();
-        // poseMap.at(i) = boost::make_shared<Pose>();
-        // poseMap.at(i) = boost::shared_ptr<Pose>();
-        // poseMap.at(i) = boost::allocate_shared<Pose>(Eigen::aligned_allocator<Pose>());
-    // }
-    exit(1);
+    for (size_t i = 0; i < nPoses; ++i)
+    {
+        poseMap.at(i) = boost::make_shared<Pose>();
+    }
+
     // std::vector<OdometryPtr> odometryMap(nOdometry);
     // for (size_t i = 0; i < nOdometry; ++i)
     // {
     //     odometryMap.at(i) = boost::make_shared<Odometry>();
     // }
-    //global size
-    //std::cout << "g: " << nFeatures2D << std::endl;
-    // nFeatures2D = 20000;
-    // std::vector<Point2DFeaturePtr> feature2DMap(nFeatures2D);
-    // for (size_t i = 0; i < nFeatures2D; ++i)
+    
+    // global size
+    std::vector<Point2DFeaturePtr> feature2DMap(nFeatures2D);
+    for (size_t i = 0; i < nFeatures2D; ++i)
+    {
+        feature2DMap.at(i) = boost::make_shared<Point2DFeature>();
+    }
+
+    std::vector<Point3DFeaturePtr> feature3DMap(nFeatures3D);
+    for (size_t i = 0; i < nFeatures3D; ++i)
+    {
+        feature3DMap.at(i) = boost::make_shared<Point3DFeature>();
+    }
+
+    for (size_t i = 0; i < nFrames; ++i)
+    {
+        size_t frameId;
+        readData(ifs, frameId);
+
+        FramePtr& frame = frameMap.at(frameId);
+
+        size_t imageFilenameLen;
+        readData(ifs, imageFilenameLen);
+        if (imageFilenameLen > 1)
+        {
+            char* imageFilename = new char[imageFilenameLen];
+            ifs.read(imageFilename, imageFilenameLen);
+
+            boost::filesystem::path imagePath = rootDir; // rootDir = .
+            imagePath /= imageFilename;
+            // 讀圖片
+            frame->image() = cv::imread(imagePath.string().c_str(), -1);
+            if (frame->image().empty())
+            {
+                std::cout << "# WARNING: Unable to read " << imagePath.string() << std::endl;
+            }
+
+            delete imageFilename;
+        }
+
+        readData(ifs, frame->cameraId());
+
+        size_t poseId;
+        readData(ifs, poseId);
+        if (poseId != static_cast<size_t>(-1))
+        {
+            frame->cameraPose() = poseMap.at(poseId);
+        }
+
+        // size_t odometryId;
+        // readData(ifs, odometryId);
+        // if (odometryId != static_cast<size_t>(-1))
+        // {
+        //     frame->systemPose() = odometryMap.at(odometryId);
+        // }
+
+        // readData(ifs, odometryId);
+        // if (odometryId != static_cast<size_t>(-1))
+        // {
+        //     frame->odometryMeasurement() = odometryMap.at(odometryId);
+        // }
+
+        // readData(ifs, poseId);
+        // if (poseId != static_cast<size_t>(-1))
+        // {
+        //     frame->gpsInsMeasurement() = poseMap.at(poseId);
+        // }
+        size_t nFeatures2D;
+        readData(ifs, nFeatures2D);
+        std::vector<Point2DFeaturePtr>& features2D = frame->features2D();
+        features2D.resize(nFeatures2D);
+        // exit(0);
+
+        for (size_t j = 0; j < features2D.size(); ++j)
+        {
+            size_t feature2DId;
+            readData(ifs, feature2DId);
+
+            if (feature2DId != static_cast<size_t>(-1))
+            {
+                features2D.at(j) = feature2DMap.at(feature2DId);
+            }
+        }
+    }
+    puts("Frames done!");
+    for (size_t i = 0; i < nPoses; ++i)
+    {
+        size_t poseId;
+        readData(ifs, poseId);
+
+        PosePtr& pose = poseMap.at(poseId);
+
+        // readData(ifs, pose->timeStamp());
+        double q[4];
+        readData(ifs, q[0]);
+        readData(ifs, q[1]);
+        readData(ifs, q[2]);
+        readData(ifs, q[3]);
+
+        memcpy(pose->rotationData(), q, sizeof(double) * 4);
+
+        double t[3];
+        readData(ifs, t[0]);
+        readData(ifs, t[1]);
+        readData(ifs, t[2]);
+
+        memcpy(pose->translationData(), t, sizeof(double) * 3);
+
+        // double cov[49];
+        // for (int j = 0; j < 49; ++j)
+        // {
+        //     readData(ifs, cov[j]);
+        // }
+
+        // memcpy(pose->covarianceData(), cov, sizeof(double) * 49);
+    }
+    puts("Poses done!");
+    // for (size_t i = 0; i < nOdometry; ++i)
     // {
-    //     feature2DMap.at(i) = boost::make_shared<Point2DFeature>();
+    //     size_t odometryId;
+    //     readData(ifs, odometryId);
+
+    //     OdometryPtr& odometry = odometryMap.at(odometryId);
+
+    //     readData(ifs, odometry->timeStamp());
+    //     readData(ifs, odometry->x());
+    //     readData(ifs, odometry->y());
+    //     readData(ifs, odometry->z());
+    //     readData(ifs, odometry->yaw());
+    //     readData(ifs, odometry->pitch());
+    //     readData(ifs, odometry->roll());
     // }
 
-    // std::vector<Point3DFeaturePtr> feature3DMap(nFeatures3D);
-    // for (size_t i = 0; i < nFeatures3D; ++i)
-    // {
-    //     feature3DMap.at(i) = boost::make_shared<Point3DFeature>();
-    // }
+    for (size_t i = 0; i < nFeatures2D; ++i)
+    {
+        size_t featureId;
+        readData(ifs, featureId);
 
-    // for (size_t i = 0; i < nFrames; ++i)
-    // {
-    //     size_t frameId;
-    //     readData(ifs, frameId);
+        Point2DFeaturePtr& feature2D = feature2DMap.at(featureId);
 
-    //     FramePtr& frame = frameMap.at(frameId);
+        int type, rows, cols;
+        readData(ifs, type);
+        readData(ifs, rows);
+        readData(ifs, cols);
 
-    //     size_t imageFilenameLen;
-    //     readData(ifs, imageFilenameLen);
-    //     std::cout << imageFilenameLen << "\n";
-    //     if (imageFilenameLen > 1)
-    //     {
-    //         char* imageFilename = new char[imageFilenameLen];
-    //         ifs.read(imageFilename, imageFilenameLen);
+        feature2D->descriptor() = cv::Mat(rows, cols, type);
 
-    //         boost::filesystem::path imagePath = rootDir; // rootDir = .
-    //         imagePath /= imageFilename;
-    //         // 讀圖片
-    //         frame->image() = cv::imread(imagePath.string().c_str(), -1);
-    //         if (frame->image().empty())
-    //         {
-    //             std::cout << "# WARNING: Unable to read " << imagePath.string() << std::endl;
-    //         }
+        cv::Mat& dtor = feature2D->descriptor();
+        //puts("Descriptor start");
+        for (int r = 0; r < rows; ++r)
+        {
+            for (int c = 0; c < cols; ++c)
+            {
+            switch (dtor.type())
+            {
+                case CV_8U:
+                    readData(ifs, dtor.at<unsigned char>(r,c));
+                    break;
+                case CV_8S:
+                    readData(ifs, dtor.at<char>(r,c));
+                    break;
+                case CV_16U:
+                    readData(ifs, dtor.at<unsigned short>(r,c));
+                    break;
+                case CV_16S:
+                    readData(ifs, dtor.at<short>(r,c));
+                    break;
+                case CV_32S:
+                    readData(ifs, dtor.at<int>(r,c));
+                    break;
+                case CV_32F:
+                    readData(ifs, dtor.at<float>(r,c));
+                    break;
+                case CV_64F:
+                default:
+                    readData(ifs, dtor.at<double>(r,c));
+                }
+            }
+        }
+        //puts("Descriptor done");
+        readData(ifs, feature2D->keypoint().angle);
+        readData(ifs, feature2D->keypoint().class_id);
+        readData(ifs, feature2D->keypoint().octave);
+        readData(ifs, feature2D->keypoint().pt.x);
+        readData(ifs, feature2D->keypoint().pt.y);
+        readData(ifs, feature2D->keypoint().response);
+        readData(ifs, feature2D->keypoint().size);
+        readData(ifs, feature2D->index());
+        // readData(ifs, feature2D->bestPrevMatchId());
+        // readData(ifs, feature2D->bestNextMatchId());
 
-    //         delete imageFilename;
-    //     }
+        // size_t nPrevMatches;
+        // readData(ifs, nPrevMatches);
+        // feature2D->prevMatches().resize(nPrevMatches);
 
-    //     readData(ifs, frame->cameraId());
+        // for (size_t j = 0; j < feature2D->prevMatches().size(); ++j)
+        // {
+        //     readData(ifs, featureId);
 
-    //     size_t poseId;
-    //     readData(ifs, poseId);
-    //     if (poseId != static_cast<size_t>(-1))
-    //     {
-    //         frame->cameraPose() = poseMap.at(poseId);
-    //     }
+        //     if (featureId != static_cast<size_t>(-1))
+        //     {
+        //         feature2D->prevMatches().at(j) = feature2DMap.at(featureId);
+        //     }
+        // }
 
-    //     // size_t odometryId;
-    //     // readData(ifs, odometryId);
-    //     // if (odometryId != static_cast<size_t>(-1))
-    //     // {
-    //     //     frame->systemPose() = odometryMap.at(odometryId);
-    //     // }
+        // size_t nNextMatches;
+        // readData(ifs, nNextMatches);
+        // feature2D->nextMatches().resize(nNextMatches);
 
-    //     // readData(ifs, odometryId);
-    //     // if (odometryId != static_cast<size_t>(-1))
-    //     // {
-    //     //     frame->odometryMeasurement() = odometryMap.at(odometryId);
-    //     // }
+        // for (size_t j = 0; j < feature2D->nextMatches().size(); ++j)
+        // {
+        //     readData(ifs, featureId);
 
-    //     // readData(ifs, poseId);
-    //     // if (poseId != static_cast<size_t>(-1))
-    //     // {
-    //     //     frame->gpsInsMeasurement() = poseMap.at(poseId);
-    //     // }
-    //     size_t nFeatures2D;
-    //     readData(ifs, nFeatures2D);
-    //     std::vector<Point2DFeaturePtr>& features2D = frame->features2D();
-    //     features2D.resize(nFeatures2D);
-    //     std::cout << nFeatures2D << "\n";
-    //     // exit(0);
+        //     if (featureId != static_cast<size_t>(-1))
+        //     {
+        //         feature2D->nextMatches().at(j) = feature2DMap.at(featureId);
+        //     }
+        // }
 
-    //     for (size_t j = 0; j < features2D.size(); ++j)
-    //     {
-    //         size_t feature2DId;
-    //         readData(ifs, feature2DId);
+        // size_t feature3DId;
+        // readData(ifs, feature3DId);
+        // if (feature3DId != static_cast<size_t>(-1))
+        // {
+        //     feature2D->feature3D() = feature3DMap.at(feature3DId);
+        // }
 
-    //         if (feature2DId != static_cast<size_t>(-1))
-    //         {
-    //             if(feature2DId == 1295) std::cout << "ff: " << j << std::endl;
-    //             features2D.at(j) = feature2DMap.at(feature2DId);
-    //         }
-    //     }
-    // }
-    // puts("Frames done!");
-    // for (size_t i = 0; i < nPoses; ++i)
-    // {
-    //     size_t poseId;
-    //     readData(ifs, poseId);
+        // size_t frameId;
+        // readData(ifs, frameId);
+        // if (frameId != static_cast<size_t>(-1))
+        // {
+        //     feature2D->frame() = frameMap.at(frameId);
+        // }
+    }
 
-    //     PosePtr& pose = poseMap.at(poseId);
+    for (size_t i = 0; i < nFeatures3D; ++i)
+    {
+        size_t featureId;
+        readData(ifs, featureId);
 
-    //     // readData(ifs, pose->timeStamp());
-    //     double q[4];
-    //     readData(ifs, q[0]);
-    //     readData(ifs, q[1]);
-    //     readData(ifs, q[2]);
-    //     readData(ifs, q[3]);
+        Point3DFeaturePtr& feature3D = feature3DMap.at(featureId);
+        Eigen::Vector3d& P = feature3D->point();
+        readData(ifs, P(0));
+        readData(ifs, P(1));
+        readData(ifs, P(2));
 
-    //     memcpy(pose->rotationData(), q, sizeof(double) * 4);
-    //     puts("OK");
-    //     exit(1);
+        // double cov[9];
+        // for (int j = 0; j < 9; ++j)
+        // {
+        //     readData(ifs, cov[j]);
+        // }
 
-    //     double t[3];
-    //     readData(ifs, t[0]);
-    //     readData(ifs, t[1]);
-    //     readData(ifs, t[2]);
+        // memcpy(feature3D->pointCovarianceData(), cov, sizeof(double) * 9);
 
-    //     memcpy(pose->translationData(), t, sizeof(double) * 3);
+        readData(ifs, feature3D->attributes());
+        readData(ifs, feature3D->weight());
 
-    //     // double cov[49];
-    //     // for (int j = 0; j < 49; ++j)
-    //     // {
-    //     //     readData(ifs, cov[j]);
-    //     // }
+        size_t nFeatures2D;
+        readData(ifs, nFeatures2D);
+        feature3D->features2D().resize(nFeatures2D);
 
-    //     // memcpy(pose->covarianceData(), cov, sizeof(double) * 49);
-    // }
+        for (size_t j = 0; j < feature3D->features2D().size(); ++j)
+        {
+            readData(ifs, featureId);
 
-    // // for (size_t i = 0; i < nOdometry; ++i)
-    // // {
-    // //     size_t odometryId;
-    // //     readData(ifs, odometryId);
+            if (featureId != static_cast<size_t>(-1))
+            {
+                feature3D->features2D().at(j) = feature2DMap.at(featureId);
+            }
+        }
+    }
+    puts("Feature3d done");
+    size_t nSegments;
+    readData(ifs, nSegments);
+    m_frameSetSegments.resize(nSegments);
 
-    // //     OdometryPtr& odometry = odometryMap.at(odometryId);
+    for (size_t segmentId = 0; segmentId < m_frameSetSegments.size(); ++segmentId)
+    {
+        size_t nFrameSets;
+        readData(ifs, nFrameSets);
+        m_frameSetSegments.at(segmentId).resize(nFrameSets);
 
-    // //     readData(ifs, odometry->timeStamp());
-    // //     readData(ifs, odometry->x());
-    // //     readData(ifs, odometry->y());
-    // //     readData(ifs, odometry->z());
-    // //     readData(ifs, odometry->yaw());
-    // //     readData(ifs, odometry->pitch());
-    // //     readData(ifs, odometry->roll());
-    // // }
+        FrameSetSegment& segment = m_frameSetSegments.at(segmentId);
 
-    // std::vector<size_t> tmp;
-    // for (size_t i = 0; i < nFeatures2D; ++i)
-    // {
-    //     size_t featureId;
-    //     readData(ifs, featureId);
+        for (size_t frameSetId = 0; frameSetId < segment.size(); ++frameSetId)
+        {
+            size_t frameSetSize;
+            readData(ifs, frameSetSize);
 
-    //     tmp.push_back(featureId);
+            segment.at(frameSetId) = boost::make_shared<FrameSet>();
+            FrameSetPtr& frameSet = segment.at(frameSetId);
+            frameSet->frames().resize(frameSetSize);
 
-    //     Point2DFeaturePtr& feature2D = feature2DMap.at(featureId);
+            for (size_t i = 0; i < frameSet->frames().size(); ++i)
+            {
+                size_t frameId;
+                readData(ifs, frameId);
 
-    //     int type, rows, cols;
-    //     readData(ifs, type);
-    //     readData(ifs, rows);
-    //     readData(ifs, cols);
+                if (frameId != static_cast<size_t>(-1))
+                {
+                    frameSet->frames().at(i) = frameMap.at(frameId);
+                }
+            }
 
-    //     feature2D->descriptor() = cv::Mat(rows, cols, type);
+            // size_t odometryId;
+            // readData(ifs, odometryId);
+            // if (odometryId != static_cast<size_t>(-1))
+            // {
+            //     frameSet->systemPose() = odometryMap.at(odometryId);
+            // }
 
-    //     cv::Mat& dtor = feature2D->descriptor();
+            // readData(ifs, odometryId);
+            // if (odometryId != static_cast<size_t>(-1))
+            // {
+            //     frameSet->odometryMeasurement() = odometryMap.at(odometryId);
+            // }
 
-    //     for (int r = 0; r < rows; ++r)
-    //     {
-    //         for (int c = 0; c < cols; ++c)
-    //         {
-    //         switch (dtor.type())
-    //         {
-    //             case CV_8U:
-    //                 readData(ifs, dtor.at<unsigned char>(r,c));
-    //                 break;
-    //             case CV_8S:
-    //                 readData(ifs, dtor.at<char>(r,c));
-    //                 break;
-    //             case CV_16U:
-    //                 readData(ifs, dtor.at<unsigned short>(r,c));
-    //                 break;
-    //             case CV_16S:
-    //                 readData(ifs, dtor.at<short>(r,c));
-    //                 break;
-    //             case CV_32S:
-    //                 readData(ifs, dtor.at<int>(r,c));
-    //                 break;
-    //             case CV_32F:
-    //                 readData(ifs, dtor.at<float>(r,c));
-    //                 break;
-    //             case CV_64F:
-    //             default:
-    //                 readData(ifs, dtor.at<double>(r,c));
-    //             }
-    //         }
-    //     }
+            // size_t poseId;
+            // readData(ifs, poseId);
+            // if (poseId != static_cast<size_t>(-1))
+            // {
+            //     frameSet->gpsInsMeasurement() = poseMap.at(poseId);
+            // }
+        }
+    }
 
-    //     readData(ifs, feature2D->keypoint().angle);
-    //     readData(ifs, feature2D->keypoint().class_id);
-    //     readData(ifs, feature2D->keypoint().octave);
-    //     readData(ifs, feature2D->keypoint().pt.x);
-    //     readData(ifs, feature2D->keypoint().pt.y);
-    //     readData(ifs, feature2D->keypoint().response);
-    //     readData(ifs, feature2D->keypoint().size);
-    //     readData(ifs, feature2D->index());
-    //     // readData(ifs, feature2D->bestPrevMatchId());
-    //     // readData(ifs, feature2D->bestNextMatchId());
-
-    //     // size_t nPrevMatches;
-    //     // readData(ifs, nPrevMatches);
-    //     // feature2D->prevMatches().resize(nPrevMatches);
-
-    //     // for (size_t j = 0; j < feature2D->prevMatches().size(); ++j)
-    //     // {
-    //     //     readData(ifs, featureId);
-
-    //     //     if (featureId != static_cast<size_t>(-1))
-    //     //     {
-    //     //         feature2D->prevMatches().at(j) = feature2DMap.at(featureId);
-    //     //     }
-    //     // }
-
-    //     // size_t nNextMatches;
-    //     // readData(ifs, nNextMatches);
-    //     // feature2D->nextMatches().resize(nNextMatches);
-
-    //     // for (size_t j = 0; j < feature2D->nextMatches().size(); ++j)
-    //     // {
-    //     //     readData(ifs, featureId);
-
-    //     //     if (featureId != static_cast<size_t>(-1))
-    //     //     {
-    //     //         feature2D->nextMatches().at(j) = feature2DMap.at(featureId);
-    //     //     }
-    //     // }
-
-    //     // size_t feature3DId;
-    //     // readData(ifs, feature3DId);
-    //     // if (feature3DId != static_cast<size_t>(-1))
-    //     // {
-    //     //     feature2D->feature3D() = feature3DMap.at(feature3DId);
-    //     // }
-
-    //     // size_t frameId;
-    //     // readData(ifs, frameId);
-    //     // if (frameId != static_cast<size_t>(-1))
-    //     // {
-    //     //     feature2D->frame() = frameMap.at(frameId);
-    //     // }
-    // }
-
-    // for (size_t i = 0; i < nFeatures3D; ++i)
-    // {
-    //     size_t featureId;
-    //     readData(ifs, featureId);
-
-    //     Point3DFeaturePtr& feature3D = feature3DMap.at(featureId);
-
-    //     Eigen::Vector3d& P = feature3D->point();
-    //     readData(ifs, P(0));
-    //     readData(ifs, P(1));
-    //     readData(ifs, P(2));
-
-    //     // double cov[9];
-    //     // for (int j = 0; j < 9; ++j)
-    //     // {
-    //     //     readData(ifs, cov[j]);
-    //     // }
-
-    //     // memcpy(feature3D->pointCovarianceData(), cov, sizeof(double) * 9);
-
-    //     readData(ifs, feature3D->attributes());
-    //     readData(ifs, feature3D->weight());
-
-    //     size_t nFeatures2D;
-    //     readData(ifs, nFeatures2D);
-    //     feature3D->features2D().resize(nFeatures2D);
-
-    //     for (size_t j = 0; j < feature3D->features2D().size(); ++j)
-    //     {
-    //         readData(ifs, featureId);
-
-    //         if (featureId != static_cast<size_t>(-1))
-    //         {
-    //             feature3D->features2D().at(j) = feature2DMap.at(featureId);
-    //         }
-    //     }
-    // }
-
-    // size_t nSegments;
-    // readData(ifs, nSegments);
-
-    // m_frameSetSegments.resize(nSegments);
-
-    // for (size_t segmentId = 0; segmentId < m_frameSetSegments.size(); ++segmentId)
-    // {
-    //     size_t nFrameSets;
-    //     readData(ifs, nFrameSets);
-    //     m_frameSetSegments.at(segmentId).resize(nFrameSets);
-
-    //     FrameSetSegment& segment = m_frameSetSegments.at(segmentId);
-
-    //     for (size_t frameSetId = 0; frameSetId < segment.size(); ++frameSetId)
-    //     {
-    //         size_t frameSetSize;
-    //         readData(ifs, frameSetSize);
-
-    //         segment.at(frameSetId) = boost::make_shared<FrameSet>();
-    //         FrameSetPtr& frameSet = segment.at(frameSetId);
-    //         frameSet->frames().resize(frameSetSize);
-
-    //         for (size_t i = 0; i < frameSet->frames().size(); ++i)
-    //         {
-    //             size_t frameId;
-    //             readData(ifs, frameId);
-
-    //             if (frameId != static_cast<size_t>(-1))
-    //             {
-    //                 frameSet->frames().at(i) = frameMap.at(frameId);
-    //             }
-    //         }
-
-    //         // size_t odometryId;
-    //         // readData(ifs, odometryId);
-    //         // if (odometryId != static_cast<size_t>(-1))
-    //         // {
-    //         //     frameSet->systemPose() = odometryMap.at(odometryId);
-    //         // }
-
-    //         // readData(ifs, odometryId);
-    //         // if (odometryId != static_cast<size_t>(-1))
-    //         // {
-    //         //     frameSet->odometryMeasurement() = odometryMap.at(odometryId);
-    //         // }
-
-    //         // size_t poseId;
-    //         // readData(ifs, poseId);
-    //         // if (poseId != static_cast<size_t>(-1))
-    //         // {
-    //         //     frameSet->gpsInsMeasurement() = poseMap.at(poseId);
-    //         // }
-    //     }
-    // }
-
-    // ifs.close();
+    ifs.close();
 
     return true;
 }

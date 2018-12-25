@@ -7,7 +7,6 @@ Pose::Pose()
  : Transform()
  , m_timeStamp(0)
 {
-    puts("hi pose");
     m_covariance.setZero();
 }
 

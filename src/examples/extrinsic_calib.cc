@@ -126,7 +126,7 @@ main(int argc, char** argv)
 
     //===========================Initialize calibration==========================
 
-    // read camera params
+    // read camera params, intrinsic
     std::vector<camodocal::CameraPtr> cameras(cameraCount);
     for (int i = 0; i < cameraCount; ++i)
     {
@@ -217,6 +217,7 @@ main(int argc, char** argv)
 
         while (it != endit)
         {
+            // 判斷當前路徑是不是檔案, 以及副檔名為 .png
             if (fs::is_regular_file(*it) && it->path().extension() == ".png")
             {
                 int camera = -1;
@@ -230,7 +231,7 @@ main(int argc, char** argv)
                 printf("image name : %s time : %ld", it->path().string().c_str(), timestamp);
                 inputImages[camera][timestamp] = it->path().string();
             }
-
+            // 讀 odometry
             if (fs::is_regular_file(*it) && it->path().extension() == ".txt" && it->path().filename().string().find_first_of("pose_") == 0)
             {
                 uint64_t timestamp = 0;
@@ -345,12 +346,15 @@ main(int argc, char** argv)
     std::thread inputThread([&inputImages, &inputOdometry, &camRigOdoCalib, cameraCount, bUseGPS]()
     {
         //uint64_t lastTimestamp = std::numeric_limits<uint64_t>::max();
-
         std::vector<ImageMap::iterator> camIterator(cameraCount);
         IsometryMap::iterator locIterator = inputOdometry.begin();
         for (int c=0; c < cameraCount; c++)
             camIterator[c] = inputImages[c].begin();
 
+        /**
+         * Lambda function
+         * 加資料到 camRigOdoCalib
+         */
         auto addLocation = [&camRigOdoCalib, bUseGPS](uint64_t timestamp, const Eigen::Isometry3f& T)
         {
             if (bUseGPS)
@@ -375,8 +379,10 @@ main(int argc, char** argv)
         // location data available, before adding images
         for (int i=0; i < 3 && locIterator != inputOdometry.end(); i++, locIterator++)
         {
+            // 將 inputOdometry 資料加到 camRigOdoCalib
             addLocation(locIterator->first, locIterator->second);
         }
+            std::cout << "thread\n";
 
         while(locIterator != inputOdometry.end())
         {
@@ -500,6 +506,7 @@ main(int argc, char** argv)
     // If so, you can stop adding data. To run the calibration without
     // waiting for the minimum motion requirement to be met,
     //camRigOdoCalib.run();
+    std::cout << "gogo\n";
     camRigOdoCalib.start();
     
     CameraSystem cameraSystem = camRigOdoCalib.cameraSystem();
@@ -522,7 +529,7 @@ main(int argc, char** argv)
         std::cout << H.block<3,1>(0,3).transpose() << std::endl;
     }*/
 
-
+    // print
     float camHeightDiff = cameraSystem.getGlobalCameraPose(0)(2,3) - refCameraGroundHeight;
     std::cout << "# INFO: Current estimate (global):" << std::endl;
     for (int i = 0; i < cameraCount; ++i)

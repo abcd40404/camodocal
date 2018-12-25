@@ -70,7 +70,7 @@ CameraRigBA::run(int beginStage, bool optimizeIntrinsics,
     // stage 3 - find local inter-camera 3D-3D correspondences
     // stage 4 - run BA
     // stage 5 - run fish-eye plane sweep to find ground plane height
-
+    std::cout << "RUNNING BA\n";
     if (m_verbose)
     {
         std::cout << "# INFO: # segments = " << m_graph.frameSetSegments().size() << std::endl;
@@ -229,6 +229,7 @@ CameraRigBA::run(int beginStage, bool optimizeIntrinsics,
 
             boost::filesystem::path pointcloudPath(dataDir);
             pointcloudPath /= "pointcloud_1";
+            std::cout << "Bug here\n";
             dumpPointCloud(pointcloudPath.string());
         }
     }
@@ -3802,7 +3803,11 @@ CameraRigBA::dumpPointCloud(const std::string& dir, bool dumpPoses)
         std::vector<OdometryPtr> odometry;
         std::vector<PosePtr> cameraPoses;
         boost::unordered_set<Point3DFeature*> scenePointSet;
-
+        /**
+         * 沒有 segment
+         * 導致 camerapose 空的
+         * 存取 core dump
+         */
         for (size_t j = 0; j < m_graph.frameSetSegments().size(); ++j)
         {
             FrameSetSegment& segment = m_graph.frameSetSegment(j);
@@ -3844,8 +3849,9 @@ CameraRigBA::dumpPointCloud(const std::string& dir, bool dumpPoses)
         boost::filesystem::path camPath = directory / (m_cameraSystem.getCamera(i)->cameraName() + "_pose.obj");
         std::ofstream pose_dump(camPath.string());
         int last_vertex_idx = 1;
+        std::cout << "Bug here\n";
+        //exit(1);
         Eigen::Vector3d origin = cameraPoses.front()->translation();
-
         for (size_t j = 0; j < cameraPoses.size(); ++j)
         {
             PosePtr& cameraPose = cameraPoses.at(j);
