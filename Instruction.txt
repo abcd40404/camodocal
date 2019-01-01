@@ -1,0 +1,3 @@
+cmake -DCMAKE_BUILD_TYPE=Release ..
+bin/intrinsic_calib -i ../data/images/calibrationdata/ -p left- -e .png --camera-model pinhole
+bin/extrinsic_calib -c ../calib/ --input ../image/
