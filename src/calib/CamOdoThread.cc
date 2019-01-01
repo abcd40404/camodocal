@@ -402,6 +402,7 @@ CamOdoThread::threadFunction(void)
 
                 if (camValid)
                 {
+                    puts("PUSH");
                     odometryPoses.push_back(frame->systemPose());
                 }
 
