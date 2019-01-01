@@ -188,6 +188,7 @@ CamOdoThread::signalFinished(void)
 void
 CamOdoThread::threadFunction(void)
 {
+    // 偵測 SURF feature point
     TemporalFeatureTracker tracker(m_camera,
                                    SURF_GPU_DETECTOR, SURF_GPU_DESCRIPTOR,
                                    RATIO_GPU, m_preprocess, m_camOdoTransform);
@@ -207,11 +208,11 @@ CamOdoThread::threadFunction(void)
     oss << "swba" << m_cameraId + 1;
     vcharge::GLOverlayExtended overlay(oss.str(), VCharge::COORDINATE_FRAME_GLOBAL);
 #endif
-
     bool halt = false;
     while (!halt)
     {
         boost::system_time timeout = boost::get_system_time() + boost::posix_time::milliseconds(10);
+        // 等 m_image available 以及 m_stop 為 true
         while (!m_image->timedWaitForData(timeout) && !m_stop)
         {
             timeout = boost::get_system_time() + boost::posix_time::milliseconds(10);
@@ -285,6 +286,9 @@ CamOdoThread::threadFunction(void)
                 OdometryPtr interpOdo;
                 if (m_poseSource == ODOMETRY && !m_interpOdometryBuffer.find(timeStamp, interpOdo))
                 {
+                    // 從 image 的 timeStamp 去內插目前 image 的 odometry
+                    // 務必讓第一張 image 前就有其他 timestamp 的 odometry
+                    // 取得目前時間, 單位： 秒
                     double timeStart = timeInSeconds();
                     while (!interpolateOdometry(m_odometryBuffer, timeStamp, interpOdo))
                     {
@@ -299,7 +303,7 @@ CamOdoThread::threadFunction(void)
 
                     m_interpOdometryBuffer.push(timeStamp, interpOdo);
                 }
-
+                std::cout << timeStamp  << std::endl;
                 m_odometryBufferMutex.unlock();
 
                 m_gpsInsBufferMutex.lock();
@@ -336,7 +340,7 @@ CamOdoThread::threadFunction(void)
                     pos(1) = -interpGpsIns->translation()(0);
                     pos(2) = interpGpsIns->translation()(2);
                 }
-
+                // 連續兩張 image 的距離必須超過 k_minKeyframeDistance
                 if (framePrev.get() != 0 &&
                     (pos - framePrev->systemPose()->position()).norm() < k_minKeyframeDistance)
                 {
@@ -357,8 +361,9 @@ CamOdoThread::threadFunction(void)
                 frame->cameraId() = m_cameraId;
                 image.copyTo(frame->image());
 
+                puts("???");
                 bool camValid = tracker.addFrame(frame, m_camera->mask());
-
+                std::cout << "camValid " << camValid << std::endl;
                 // tag frame with odometry and GPS/INS data
 
                 if (interpOdo)
@@ -459,6 +464,7 @@ CamOdoThread::threadFunction(void)
         // center the text horizontally and at bottom of image
         cv::Point textOrg((m_sketch.cols - textSize.width) / 2,
                            m_sketch.rows - textSize.height - 10);
+        // 在圖像上畫字
         cv::putText(m_sketch, status, textOrg, fontFace, fontScale,
                     cv::Scalar::all(255), thickness, CV_AA);
 

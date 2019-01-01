@@ -228,7 +228,7 @@ main(int argc, char** argv)
                     printf("cannot find input image camera_[d]_[llu].png\n");
                     return 1;
                 }
-                printf("image name : %s time : %ld", it->path().string().c_str(), timestamp);
+                printf("image name : %s time : %ld\n", it->path().string().c_str(), timestamp);
                 inputImages[camera][timestamp] = it->path().string();
             }
             // 讀 odometry
@@ -371,10 +371,10 @@ main(int argc, char** argv)
                 float yaw = std::atan2(T.linear()(1,0), T.linear()(0,0));
                 camRigOdoCalib.addOdometry(T.translation()[0], T.translation()[1], T.translation()[2], yaw, timestamp);
 
-                std::cout << "POSE: x=" << T.translation()[0] << ", y=" << T.translation()[1] << ", yaw=" << yaw << " [" << timestamp << "]" << std::endl;
+                //std::cout << "POSE: x=" << T.translation()[0] << ", y=" << T.translation()[1] << ", yaw=" << yaw << " [" << timestamp << "]" << std::endl;
             }
         };
-
+        //std::cout << "Rig running " << camRigOdoCalib.isRunning() << std::endl;
         // ensure that we have
         // location data available, before adding images
         for (int i=0; i < 3 && locIterator != inputOdometry.end(); i++, locIterator++)
@@ -382,8 +382,7 @@ main(int argc, char** argv)
             // 將 inputOdometry 資料加到 camRigOdoCalib
             addLocation(locIterator->first, locIterator->second);
         }
-            std::cout << "thread\n";
-
+        std::cout << "Input Odometry SIZE" << inputOdometry.size() << std::endl;
         while(locIterator != inputOdometry.end())
         {
             if (camRigOdoCalib.isRunning()) break;
@@ -403,18 +402,17 @@ main(int argc, char** argv)
                     if(camIterator[c]->first < locTime)
                     {
                         uint64_t camTime = camIterator[c]->first;
-                        std::cout << "IMG: " << camTime << " -> " << camIterator[c]->second << std::endl;
-                        std::cout << "Pose : " << locIterator->first << std::endl << locIterator->second.linear() << std::endl;
+                        //std::cout << "IMG: " << camTime << " -> " << camIterator[c]->second << std::endl;
+                        //std::cout << "Pose : " << locIterator->first << std::endl << locIterator->second.linear() << std::endl;
                         camRigOdoCalib.addFrame(c, cv::imread(camIterator[c]->second), camTime);
                         camIterator[c]++;
                         hasData = true;
                     }
                 }
             }
-
             locIterator++;
         }
-
+    std::cout << "THREAD END " << std::endl;
 #if 0
         //int ignore_frame = 3;
 
@@ -463,7 +461,6 @@ main(int argc, char** argv)
                 lastTimestamp = timestamp;
         }
 #endif
-
         if (!camRigOdoCalib.isRunning()) camRigOdoCalib.run();
     });
 
@@ -506,7 +503,7 @@ main(int argc, char** argv)
     // If so, you can stop adding data. To run the calibration without
     // waiting for the minimum motion requirement to be met,
     //camRigOdoCalib.run();
-    std::cout << "gogo\n";
+    std::cout << "Rig running " << camRigOdoCalib.isRunning() << std::endl;
     camRigOdoCalib.start();
     
     CameraSystem cameraSystem = camRigOdoCalib.cameraSystem();

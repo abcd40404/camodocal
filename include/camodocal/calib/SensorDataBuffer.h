@@ -331,6 +331,7 @@ SensorDataBuffer<T>::push(uint64_t timestamp, const T& data)
 
     if (mBuffer.size() == mBuffer.capacity())
     {
+        // 滿了之後, 從頭開始放
         mIndex = (mIndex + 1) % mBuffer.capacity();
         mBuffer.at(mIndex).first = timestamp;
         mBuffer.at(mIndex).second = data;

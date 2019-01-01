@@ -232,6 +232,7 @@ FeatureTracker::detectFeatures(const cv::Mat& image, std::vector<cv::KeyPoint>& 
     case SURF_GPU_DETECTOR:
     {
         m_SURF_GPU->detect(image, keypoints, mask);
+        exit(1);
         break;
     }
     default:

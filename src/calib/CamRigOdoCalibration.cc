@@ -41,7 +41,7 @@ CamRigOdoCalibration::CamRigOdoCalibration(std::vector<CameraPtr>& cameras,
     {
         m_images.at(i) = new AtomicData<cv::Mat>();
         m_camOdoCompleted[i] = false;
-
+        std::cout << "RIG stop " << m_stop << std::endl;
         CamOdoThread* thread = new CamOdoThread(options.poseSource, options.nMotions, i, options.preprocessImages,
                                                 m_images.at(i), m_cameras.at(i),
                                                 m_odometryBuffer, m_interpOdometryBuffer, m_odometryBufferMutex,
@@ -188,7 +188,7 @@ CamRigOdoCalibration::start(void)
         // == camera size()
         for (size_t i = 0; i < m_camOdoThreads.size(); ++i)
         {
-            puts("BUG");
+            puts("Thread BUG");
             m_camOdoThreads.at(i)->launch();
         }
 
@@ -334,7 +334,7 @@ CamRigOdoCalibration::buildGraph(void)
 {
     boost::icl::interval_map<uint64_t, std::set<int> > intervals;
     std::vector<std::set<int> > cameraIdSets(m_camOdoThreads.size());
-    std::cout << "TS: " << m_camOdoThreads.size() << std::endl;
+
     for (size_t i = 0; i < m_camOdoThreads.size(); ++i)
     {
         CamOdoThread* camOdoThread = m_camOdoThreads.at(i);
@@ -344,7 +344,7 @@ CamRigOdoCalibration::buildGraph(void)
                                            camOdoThread->camOdoTransform());
 
         cameraIdSets[i].insert(camOdoThread->cameraId());
-        std::cout << "Size: " <<camOdoThread->frameSegments().size();
+        std::cout << "FrameSegments Size: " <<camOdoThread->frameSegments().size() << std::endl;
         for (size_t j = 0; j < camOdoThread->frameSegments().size(); ++j)
         {
             uint64_t start = camOdoThread->frameSegments().at(j).front()->cameraPose()->timeStamp();
@@ -363,7 +363,6 @@ CamRigOdoCalibration::buildGraph(void)
     {
         boost::icl::interval<uint64_t>::type interval = it->first;
         std::set<int> cameraIds = it->second;
-
         uint64_t start = interval.lower();
         uint64_t end = interval.upper();
 
