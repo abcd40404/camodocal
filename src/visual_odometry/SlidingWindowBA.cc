@@ -13,6 +13,7 @@
 #include "camodocal/EigenUtils.h"
 #include "../npoint/five-point/five-point.hpp"
 #include "../pose_estimation/P3P.h"
+#include <opencv2/calib3d.hpp>  
 
 namespace camodocal
 {
@@ -113,7 +114,6 @@ SlidingWindowBA::addFrame(FramePtr& frame)
                 imagePoints[j].push_back(fc.at(j)->keypoint().pt);
             }
         }
-
         if ((int)imagePoints[0].size() < k_min2D2DFeatureCorrespondences)
         {
             if (m_verbose)
@@ -129,14 +129,16 @@ SlidingWindowBA::addFrame(FramePtr& frame)
         {
             rectifyImagePoints(k_camera, imagePoints[i], rectImagePoints[i]);
         }
-
         cv::Mat inliers;
         if (m_mode == VO)
         {
             cv::Mat E, R_cv, t_cv;
-            E = findEssentialMat(rectImagePoints[0], rectImagePoints[1], 1.0, cv::Point2d(0.0, 0.0),
-                                 CV_FM_RANSAC, 0.99, k_reprojErrorThresh / k_nominalFocalLength, 100, inliers);
-            recoverPose(E, rectImagePoints[0], rectImagePoints[1], R_cv, t_cv, 1.0, cv::Point2d(0.0, 0.0), inliers);
+            puts("Essential mat bug");
+	    //std::cout << rectImagePoints[0] << " " << rectImagePoints[1] << std::endl;
+            E = cv::findEssentialMat(rectImagePoints[0], rectImagePoints[1], 1.0, cv::Point2d(0.0, 0.0),
+                                 CV_FM_RANSAC, 0.99, k_reprojErrorThresh / k_nominalFocalLength, inliers);
+            puts("Essential mat ok");
+            cv::recoverPose(E, rectImagePoints[0], rectImagePoints[1], R_cv, t_cv, 1.0, cv::Point2d(0.0, 0.0), inliers);
 
             if (m_verbose)
             {
@@ -160,6 +162,7 @@ SlidingWindowBA::addFrame(FramePtr& frame)
             inliers = cv::Scalar(1);
         }
 
+        puts("inlier ok");
         std::vector<std::vector<Point2DFeaturePtr> > inlierFeatureCorrespondences;
         for (int i = 0; i < inliers.cols; ++i)
         {
@@ -170,7 +173,7 @@ SlidingWindowBA::addFrame(FramePtr& frame)
 
             inlierFeatureCorrespondences.push_back(featureCorrespondences.at(i));
         }
-
+        
         for (int i = 0; i < 2; ++i)
         {
             imagePoints[i].clear();
@@ -196,9 +199,11 @@ SlidingWindowBA::addFrame(FramePtr& frame)
 
         if (m_mode == VO)
         {
+		puts("triangulate");
             triangulatePoints(framePrev->cameraPose()->rotation(), framePrev->cameraPose()->translation(), imagePoints[0],
                               frameCurr->cameraPose()->rotation(), frameCurr->cameraPose()->translation(), imagePoints[1],
                               points3D, indices);
+		puts("GG");
         }
         else
         {
@@ -1051,9 +1056,10 @@ SlidingWindowBA::triangulatePoints(const Eigen::Quaterniond& q1,
         A.col(1) = - spt2;
 
         Eigen::Vector3d b = - H.block<3,1>(0,3);
-
+	std::cout << A << std::endl;
         Eigen::Vector2d gamma = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
 
+	exit(1);
         // check if scene point is behind camera
         if (gamma(0) < 0.0 || gamma(1) < 0.0)
         {

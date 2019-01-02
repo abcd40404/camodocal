@@ -45,7 +45,6 @@ Mat findEssentialMat( InputArray _points1, InputArray _points2, double focal, Po
 	}
 	points1.convertTo(points1, CV_64F); 
 	points2.convertTo(points2, CV_64F); 
-
 	points1.col(0) = (points1.col(0) - pp.x) / focal; 
 	points2.col(0) = (points2.col(0) - pp.x) / focal; 
 	points1.col(1) = (points1.col(1) - pp.y) / focal; 
@@ -62,12 +61,12 @@ Mat findEssentialMat( InputArray _points1, InputArray _points2, double focal, Po
 	CvMat p2 = points2; 
 	CvMat _E = E;  
 	CvMat* tempMask = cvCreateMat(1, npoints, CV_8U); 
-	
 	assert(npoints >= 5); 
 	threshold /= focal; 
 	if (method == CV_FM_RANSAC)
 	{
 		estimator.runRANSAC(&p1, &p2, &_E, tempMask, threshold, prob, maxIters); 
+		puts("RANSAC ok");
 	}
 	else
 	{
@@ -273,7 +272,7 @@ int CvEMEstimator::run5Point( const CvMat* q1, const CvMat* q2, CvMat* ematrix )
 //	std::cout << Q1 << std::endl; 
 //	std::cout << Q2 << std::endl; 
 
-
+	puts("5");
 	int n = Q1.rows(); 
 	Eigen::MatrixXd Q(n, 9), V, EE; 
 	Q.col(0) = Q1.col(0).array() * Q2.col(0).array(); 
@@ -284,10 +283,12 @@ int CvEMEstimator::run5Point( const CvMat* q1, const CvMat* q2, CvMat* ematrix )
 	Q.col(5) = Q2.col(1).array(); 
 	Q.col(6) = Q1.col(0).array(); 
 	Q.col(7) = Q1.col(1).array(); 
-	Q.col(8).setOnes(); 
-	V = Q.jacobiSvd(Eigen::ComputeFullV|Eigen::ComputeThinU).matrixV(); 
+	Q.col(8).setOnes();
+	std::cout << n << std::endl; 
+	std::cout << Q << std::endl;
+	V = Q.jacobiSvd(Eigen::ComputeFullV|Eigen::ComputeThinU).matrixV();
+	while(1);
 	EE = V.block<9, 4>(0, 5); 
-
 	Eigen::MatrixXd A(10, 20); 
 	calibrated_fivepoint_helper(EE.data(), A.data()); 
 	A = A.block<10, 10>(0, 0).inverse() * A.block<10, 10>(0, 10); 

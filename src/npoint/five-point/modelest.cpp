@@ -143,10 +143,12 @@ bool CvModelEstimator2::runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* mode
 
     for( iter = 0; iter < niters; iter++ )
     {
+        std::cout << "Iter: " << iter << std::endl;
         int i, goodCount, nmodels;
         if( count > modelPoints )
         {
             bool found = getSubset( m1, m2, ms1, ms2, 300 );
+            puts("subset ok");
             if( !found )
             {
                 if( iter == 0 )
@@ -154,8 +156,9 @@ bool CvModelEstimator2::runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* mode
                 break;
             }
         }
-
+        puts("kernel bug");
         nmodels = runKernel( ms1, ms2, models );
+        puts("kernel ok");
         if( nmodels <= 0 )
             continue;
         for( i = 0; i < nmodels; i++ )
