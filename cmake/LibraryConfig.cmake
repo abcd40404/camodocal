@@ -45,7 +45,7 @@ camodocal_optional_dependency(OpenMP)
 camodocal_optional_dependency(Glog)
 camodocal_optional_dependency(Gflags)
 camodocal_optional_dependency(TBB)
-set(OpenCV_DIR "/usr/local/share/OpenCV/")
+set(OpenCV_DIR "/usr/local/share/OpenCV")
 camodocal_optional_dependency(OpenCV)
 
 # Consider making this impossible to use external Ceres again due to the following possible issue:
@@ -61,7 +61,8 @@ if(OpenCV_FOUND)
         add_definitions(-DHAVE_OPENCV3)
 		message(STATUS "defined HAVE_OPENCV3")
 
-        set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${OPENCV_INCLUDE_DIRS})
+        # check_include_file_cxx 根據 CMAKE_REQUIRED_INCLUDES 搜尋
+        set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${OpenCV_INCLUDE_DIRS})
         include(CheckIncludeFileCXX)
 
         check_include_file_cxx(opencv2/face/facerec.hpp HAVE_OPENCV_CONTRIB)

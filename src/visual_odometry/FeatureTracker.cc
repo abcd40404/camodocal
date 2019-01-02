@@ -523,6 +523,7 @@ TemporalFeatureTracker::addFrame(FramePtr& frame, const cv::Mat& mask)
     }
 
     detectFeatures(m_image, m_kpts, m_mask);
+    exit(1);
     computeDescriptors(m_image, m_kpts, m_dtor);
     puts("FEATURE OK");
     if (m_BA.empty())
