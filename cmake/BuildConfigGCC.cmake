@@ -45,7 +45,7 @@ else(APPLE)
 # Eigen 用 DEBUG TYPE 會掛掉
 add_compiler_flags("    -g -ggdb -D_DEBUG -march=native" Debug          CACHE)
 add_compiler_flags("             -DNDEBUG -march=native" ReleaseAll     CACHE)
-add_compiler_flags("-O2                   -march=native" Release        CACHE)
+add_compiler_flags("-O2 -g                -march=native" Release        CACHE)
 add_compiler_flags("-O2 -g -ggdb          -march=native" RelWithDebInfo CACHE)
 add_compiler_flags("-Os                   -march=native" MinSizeRel     CACHE)
 endif(APPLE)

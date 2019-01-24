@@ -53,6 +53,19 @@ camodocal_link_libraries(infra_calib
   camodocal_infrastr_calib
 )
 
+camodocal_executable(_test
+  test.cc
+)
+
+camodocal_link_libraries(_test
+  ${CAMODOCAL_PLATFORM_UNIX_LIBRARIES}
+  ${Boost_FILESYSTEM_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+  camodocal_sparse_graph
+)
+
+
 endif(CAMODOCAL_CALIB_FOUND AND OpenCV_FOUND AND HAVE_OPENCV_XFEATURES2D_NONFREE)
 
 if(OpenCV_FOUND)

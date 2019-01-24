@@ -493,7 +493,7 @@ TemporalFeatureTracker::TemporalFeatureTracker(const CameraConstPtr& camera,
  , k_nominalFocalLength(300.0)
  , k_reprojErrorThresh(1.0)
 {
-
+std::cout << globalCameraPose << std::endl;
 }
 
 bool

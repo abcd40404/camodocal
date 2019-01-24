@@ -108,6 +108,7 @@ protected:
 class TemporalFeatureTracker: public FeatureTracker
 {
 public:
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     TemporalFeatureTracker(const CameraConstPtr& camera,
                            DetectorType detectorType = ORB_DETECTOR,
                            DescriptorType descriptorType = ORB_DESCRIPTOR,

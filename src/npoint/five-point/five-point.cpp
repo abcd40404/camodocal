@@ -250,6 +250,7 @@ CvEMEstimator::CvEMEstimator()
 
 int CvEMEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* model )
 {
+
     run5Point(m1, m2, model); 
 }
 
@@ -269,10 +270,9 @@ int CvEMEstimator::run5Point( const CvMat* q1, const CvMat* q2, CvMat* ematrix )
 	cv::cv2eigen(cv::Mat(q1).reshape(1, q1->cols), Q2); 
 	cv::cv2eigen(cv::Mat(q2).reshape(1, q2->cols), Q1);
 #endif
-//	std::cout << Q1 << std::endl; 
-//	std::cout << Q2 << std::endl; 
-
-	puts("5");
+	std::cout << "Q1: " << Q1 << std::endl; 
+	std::cout << "Q2: " << Q2 << std::endl; 
+	//puts("5");
 	int n = Q1.rows(); 
 	Eigen::MatrixXd Q(n, 9), V, EE; 
 	Q.col(0) = Q1.col(0).array() * Q2.col(0).array(); 
@@ -284,11 +284,10 @@ int CvEMEstimator::run5Point( const CvMat* q1, const CvMat* q2, CvMat* ematrix )
 	Q.col(6) = Q1.col(0).array(); 
 	Q.col(7) = Q1.col(1).array(); 
 	Q.col(8).setOnes();
-	std::cout << n << std::endl; 
 	std::cout << Q << std::endl;
 	V = Q.jacobiSvd(Eigen::ComputeFullV|Eigen::ComputeThinU).matrixV();
-	while(1);
-	EE = V.block<9, 4>(0, 5); 
+	puts("OK");
+        EE = V.block<9, 4>(0, 5); 
 	Eigen::MatrixXd A(10, 20); 
 	calibrated_fivepoint_helper(EE.data(), A.data()); 
 	A = A.block<10, 10>(0, 0).inverse() * A.block<10, 10>(0, 10); 

@@ -192,6 +192,16 @@ CamOdoThread::threadFunction(void)
     TemporalFeatureTracker tracker(m_camera,
                                    SURF_GPU_DETECTOR, SURF_GPU_DESCRIPTOR,
                                    RATIO_GPU, m_preprocess, m_camOdoTransform);
+/*Eigen::MatrixXd QQ(5, 9), VV;
+    QQ<< 0.0748639 ,-0.00956328  , -0.269933 ,-0.00732751 ,0.000936033 ,  0.0264205 , -0.277342 ,  0.0354283     ,      1
+   ,0.116749 , -0.0789595 ,  -0.304562 , -0.0688296  , 0.0465508  ,  0.179556  , -0.383333 ,   0.259255   ,        1
+  ,0.0875125 , 0.00555392  ,  0.246872  ,0.00568944 ,0.000361076  , 0.0160499  ,  0.354485  , 0.0224971    ,       1
+ ,0.00513873 , 0.00763792  ,-0.0774154  , 0.0062507 , 0.00929071  ,-0.0941675 , -0.0663786 , -0.0986615    ,       1
+  ,0.0508777 ,  0.0996472 ,  -0.224235  , 0.0947552  ,  0.185584  , -0.417618 ,  -0.226894 ,  -0.444387     ,      1;
+VV = QQ.jacobiSvd(Eigen::ComputeFullV|Eigen::ComputeThinU).matrixV();
+std::cout << VV << std::endl;
+exit(1);*/
+
     tracker.setVerbose(m_camOdoCalib.getVerbose());
 
     FramePtr framePrev;
@@ -303,7 +313,7 @@ CamOdoThread::threadFunction(void)
 
                     m_interpOdometryBuffer.push(timeStamp, interpOdo);
                 }
-                std::cout << timeStamp  << std::endl;
+                std::cout << "timeStamp: " << timeStamp  << std::endl;
                 m_odometryBufferMutex.unlock();
 
                 m_gpsInsBufferMutex.lock();
@@ -361,7 +371,6 @@ CamOdoThread::threadFunction(void)
                 frame->cameraId() = m_cameraId;
                 image.copyTo(frame->image());
 
-                puts("???");
                 bool camValid = tracker.addFrame(frame, m_camera->mask());
                 std::cout << "camValid " << camValid << std::endl;
                 // tag frame with odometry and GPS/INS data

@@ -84,7 +84,6 @@ SurfGPU::detect(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints,
     {
         MatType kptsGPU;
 
-        puts("GOGOG");
         (*m_surfGPU)(imageGPU, maskGPU, kptsGPU);
         m_surfGPU->downloadKeypoints(kptsGPU, keypoints);
     }

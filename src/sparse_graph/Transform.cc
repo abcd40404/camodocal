@@ -5,6 +5,7 @@ namespace camodocal
 
 Transform::Transform()
 {
+    puts("???");
     m_q.setIdentity();
     m_t.setZero();
 }

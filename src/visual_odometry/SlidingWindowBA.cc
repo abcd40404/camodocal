@@ -123,7 +123,6 @@ SlidingWindowBA::addFrame(FramePtr& frame)
 
             return false;
         }
-
         std::vector<cv::Point2f> rectImagePoints[2];
         for (size_t i = 0; i < 2; ++i)
         {
@@ -133,12 +132,9 @@ SlidingWindowBA::addFrame(FramePtr& frame)
         if (m_mode == VO)
         {
             cv::Mat E, R_cv, t_cv;
-            puts("Essential mat bug");
-	    //std::cout << rectImagePoints[0] << " " << rectImagePoints[1] << std::endl;
-            E = cv::findEssentialMat(rectImagePoints[0], rectImagePoints[1], 1.0, cv::Point2d(0.0, 0.0),
-                                 CV_FM_RANSAC, 0.99, k_reprojErrorThresh / k_nominalFocalLength, inliers);
-            puts("Essential mat ok");
-            cv::recoverPose(E, rectImagePoints[0], rectImagePoints[1], R_cv, t_cv, 1.0, cv::Point2d(0.0, 0.0), inliers);
+            E = findEssentialMat(rectImagePoints[0], rectImagePoints[1], 1.0, cv::Point2d(0.0, 0.0),
+                                 CV_FM_RANSAC, 0.99, k_reprojErrorThresh / k_nominalFocalLength, 100, inliers);
+            recoverPose(E, rectImagePoints[0], rectImagePoints[1], R_cv, t_cv, 1.0, cv::Point2d(0.0, 0.0), inliers);
 
             if (m_verbose)
             {
@@ -162,8 +158,8 @@ SlidingWindowBA::addFrame(FramePtr& frame)
             inliers = cv::Scalar(1);
         }
 
-        puts("inlier ok");
-        std::vector<std::vector<Point2DFeaturePtr> > inlierFeatureCorrespondences;
+        std::cout << "inliers: " << inliers.cols << std::endl;
+	std::vector<std::vector<Point2DFeaturePtr> > inlierFeatureCorrespondences;
         for (int i = 0; i < inliers.cols; ++i)
         {
             if (!inliers.at<unsigned char>(0,i))
@@ -173,7 +169,7 @@ SlidingWindowBA::addFrame(FramePtr& frame)
 
             inlierFeatureCorrespondences.push_back(featureCorrespondences.at(i));
         }
-        
+        std::cout << "inlier size: " << inlierFeatureCorrespondences.size() << std::endl; 
         for (int i = 0; i < 2; ++i)
         {
             imagePoints[i].clear();
@@ -203,7 +199,6 @@ SlidingWindowBA::addFrame(FramePtr& frame)
             triangulatePoints(framePrev->cameraPose()->rotation(), framePrev->cameraPose()->translation(), imagePoints[0],
                               frameCurr->cameraPose()->rotation(), frameCurr->cameraPose()->translation(), imagePoints[1],
                               points3D, indices);
-		puts("GG");
         }
         else
         {
@@ -1039,9 +1034,10 @@ SlidingWindowBA::triangulatePoints(const Eigen::Quaterniond& q1,
     Eigen::Matrix4d H_cam1_inv = H_cam1.inverse();
     Eigen::Matrix4d H_cam2 = homogeneousTransform(q2.toRotationMatrix(), t2);
     Eigen::Matrix4d H = H_cam2 * H_cam1_inv;
-
+    std::cout << "image point: " << imagePoints1.size() << std::endl;
     for (size_t i = 0; i < imagePoints1.size(); ++i)
     {
+	std::cout << i << std::endl;
         const cv::Point2f& p1_cv = imagePoints1.at(i);
         const cv::Point2f& p2_cv = imagePoints2.at(i);
 
@@ -1056,10 +1052,9 @@ SlidingWindowBA::triangulatePoints(const Eigen::Quaterniond& q1,
         A.col(1) = - spt2;
 
         Eigen::Vector3d b = - H.block<3,1>(0,3);
-	std::cout << A << std::endl;
+	std::cout << A << " b: " << b << std::endl;
         Eigen::Vector2d gamma = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
 
-	exit(1);
         // check if scene point is behind camera
         if (gamma(0) < 0.0 || gamma(1) < 0.0)
         {

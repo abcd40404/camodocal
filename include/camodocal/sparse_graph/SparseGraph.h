@@ -35,6 +35,7 @@ typedef boost::weak_ptr<const Point3DFeature> Point3DFeatureConstWPtr;
 class Frame
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Frame();
 
     PosePtr& cameraPose(void);
